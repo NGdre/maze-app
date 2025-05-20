@@ -1,0 +1,16 @@
+{
+  "extends": "@tsconfig/vite-react/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@utils": ["src/utils"],
+      "@generators/*": ["src/models/generators/*"],
+      "@solvers/*": ["src/models/solvers/*"],
+      "@models/*": ["src/models/*"],
+      "@stores/*": ["src/stores/*"],
+      "@constants": ["src/constants"]
+    }
+  },
+  "include": ["src"]
+}
