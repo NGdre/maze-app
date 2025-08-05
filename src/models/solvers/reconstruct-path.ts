@@ -1,14 +1,12 @@
-export function reconstructPath<T extends string>(
+export function* reconstructPathSerial<T extends string>(
   startId: T,
   endId: T,
   cameFrom: Map<T, T>
 ) {
-  const path = [];
-
   let currId = endId;
 
   while (currId !== startId) {
-    path.push(currId);
+    yield currId;
 
     const maybeCurrId = cameFrom.get(currId);
 
@@ -16,7 +14,13 @@ export function reconstructPath<T extends string>(
     else throw new Error("bad data in cameFrom");
   }
 
-  path.push(startId);
+  yield startId;
+}
 
-  return path.reverse();
+export function reconstructPath<T extends string>(
+  startId: T,
+  endId: T,
+  cameFrom: Map<T, T>
+) {
+  return [...reconstructPathSerial(startId, endId, cameFrom)].reverse();
 }
