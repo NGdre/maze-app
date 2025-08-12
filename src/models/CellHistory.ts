@@ -141,6 +141,12 @@ export default class CellHistory {
     };
   }
 
+  applyMultipleSteps(arrayOfsteps: TrackableCellChangeForward[][]): void {
+    const flattened = arrayOfsteps.flat();
+
+    this.applyStep(flattened);
+  }
+
   undo(): void {
     if (this.currIndex < 0) return;
 
