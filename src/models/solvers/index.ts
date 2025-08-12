@@ -1,16 +1,24 @@
+import { AlgoConfig, AlgoFeatureName } from "src/configs/types";
 import aStar from "./a-star";
-import bfs from "./breadth-first-search";
+import { bfsVisual, bfsSerialVisual } from "./breadth-first-search";
 
-export const solversInfo = [
+export const solversInfo: AlgoConfig[] = [
   {
     function: aStar,
     algoName: "A*",
     id: 0,
+    features: [],
+    multipleFunctions: false,
   },
   {
-    function: bfs,
+    functions: {
+      SteppedAlgoExecution: bfsSerialVisual,
+      JumpToFinal: bfsVisual,
+    },
     algoName: "breadth first search",
     id: 1,
+    features: ["JumpToFinal", "SteppedAlgoExecution"],
+    multipleFunctions: true,
   },
 ];
 
@@ -27,10 +35,12 @@ export const getSolverIdByAlgoName = (algoName: string) => {
 const notFoundSolverMessage = (id: number) =>
   "there's no algorithm with id " + id;
 
-export const getFunctionById = (id: number) => {
+export const getFunctionById = (id: number, feature?: AlgoFeatureName) => {
   const foundSI = solversInfo.find((si) => si.id === id);
 
   if (!foundSI) throw new Error(notFoundSolverMessage(id));
 
-  return foundSI.function;
+  if (foundSI.multipleFunctions && feature) return foundSI.functions[feature];
+
+  if ("function" in foundSI) return foundSI.function;
 };
