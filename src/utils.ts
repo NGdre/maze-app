@@ -1,3 +1,6 @@
+import { Point2d } from "@models/maze";
+// наверное Point2d нужно вынести из maze
+
 export {
   sample,
   cloneDeep,
@@ -58,4 +61,27 @@ export function mapGenerator<T, U, R>(
       return this;
     },
   };
+}
+
+export function getCentroid(points: Point2d[]) {
+  let sumX = 0,
+    sumY = 0;
+  for (const point of points) {
+    sumX += point.x;
+    sumY += point.y;
+  }
+  return {
+    x: sumX / points.length,
+    y: sumY / points.length,
+  };
+}
+
+export function scalePolygon(points: Point2d[], scaleFactor: number) {
+  const centroid = getCentroid(points);
+  return points.map((point) => {
+    return {
+      x: centroid.x + (point.x - centroid.x) * scaleFactor,
+      y: centroid.y + (point.y - centroid.y) * scaleFactor,
+    };
+  });
 }
