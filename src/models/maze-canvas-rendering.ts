@@ -1,5 +1,5 @@
 import { loopPairs } from "@utils";
-import { type PolygonCell } from "./maze";
+import { Point2d, type PolygonCell } from "./maze";
 import ow from "ow";
 
 type context2d = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
@@ -110,7 +110,21 @@ export function fillWithCircle(
   ctx.closePath(); //это нужно?
 }
 
-export function fillPolygon(
+export function drawPolygon(ctx: context2d, points: Point2d[], color: string) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+
+  ctx.moveTo(points[0].x, points[0].y);
+
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+
+  ctx.closePath();
+  ctx.fill();
+}
+
+export function fillPolygonWithCircle(
   ctx: context2d,
   cell: PolygonCell,
   color: string,

@@ -15,7 +15,7 @@ const FRACTION_DIGITS = 2;
 export class Point2d {
   x: number;
   y: number;
-  private fractionDigits: number = FRACTION_DIGITS || 0;
+  private fractionDigits?: number = FRACTION_DIGITS || 0;
 
   constructor(x: number, y: number) {
     const { fractionDigits } = this;

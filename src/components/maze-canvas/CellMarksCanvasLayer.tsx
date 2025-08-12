@@ -1,7 +1,7 @@
 import { CanvasLayer } from "@components/lib/CanvasLayer";
 import { colors } from "@constants";
 import { createCellFinder } from "@models/maze";
-import { fillPolygon } from "@models/maze-canvas-rendering";
+import { fillPolygonWithCircle } from "@models/maze-canvas-rendering";
 import { identity } from "lodash";
 import { useCallback } from "react";
 import { useMazeStore } from "@stores/maze-store";
@@ -23,11 +23,11 @@ export const CellMarksCanvasLayer = () => {
 
       const startCell = findCell(startId);
 
-      if (startCell) fillPolygon(ctx, startCell, colors.START_CELL);
+      if (startCell) fillPolygonWithCircle(ctx, startCell, colors.START_CELL);
 
       const endCell = findCell(endId);
 
-      if (endCell) fillPolygon(ctx, endCell, colors.END_CELL);
+      if (endCell) fillPolygonWithCircle(ctx, endCell, colors.END_CELL);
     },
     [cells, startId, endId]
   );

@@ -3,7 +3,7 @@ import { CellMarksCanvasLayer } from "./CellMarksCanvasLayer";
 import { useMazeStore } from "@stores/maze-store";
 import { CanvasLayer } from "@components/lib/CanvasLayer";
 import { createCellFinder } from "@models/maze";
-import { fillPolygon } from "@models/maze-canvas-rendering";
+import { fillPolygonWithCircle } from "@models/maze-canvas-rendering";
 import { colors } from "@constants";
 
 jest.mock("@stores/maze-store");
@@ -12,7 +12,7 @@ jest.mock("@models/maze");
 jest.mock("@models/maze-canvas-rendering");
 
 describe("CellMarksCanvasLayer", () => {
-  const mockFillPolygon = fillPolygon as jest.Mock;
+  const mockFillPolygon = fillPolygonWithCircle as jest.Mock;
   const mockCreateCellFinder = createCellFinder as jest.Mock;
 
   let mockStore: {

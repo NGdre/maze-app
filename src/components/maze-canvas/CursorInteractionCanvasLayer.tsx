@@ -1,7 +1,7 @@
 import { CanvasLayer } from "@components/lib/CanvasLayer";
 import { CELL_SELECTION_THROTTLE_DELAY, colors } from "@constants";
 import { createCellFinder, generateRectMazeId, RectMaze } from "@models/maze";
-import { fillPolygon } from "@models/maze-canvas-rendering";
+import { fillPolygonWithCircle } from "@models/maze-canvas-rendering";
 import { cellSelectionModes, useMazeStore } from "@stores/maze-store";
 import { flow, noop, throttle } from "@utils";
 import ow from "ow";
@@ -55,11 +55,11 @@ function hoverInteraction(config: {
 
     if (cell) {
       ctx.reset();
-      fillPolygon(ctx, cell, cellColor);
+      fillPolygonWithCircle(ctx, cell, cellColor);
     }
   }, CELL_SELECTION_THROTTLE_DELAY);
 
-  const clearHoveredCell = (e: MouseEvent) => {
+  const clearHoveredCell = () => {
     ctx.reset();
   };
 
