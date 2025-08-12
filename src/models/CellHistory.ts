@@ -37,6 +37,18 @@ export default class CellHistory {
     return this._history[this.historyIndex]; // как сделать иммутабельным?
   }
 
+  canUndo() {
+    return this.currIndex >= 0;
+  }
+
+  canRedo() {
+    return this.currIndex < this._history.length - 1;
+  }
+
+  isEmpty() {
+    return this._history.length === 0;
+  }
+
   private applyCellChange(change: TrackableCellChangeForward): void {
     const { id, color, text } = change;
     let currentCell = this.currentState.get(id);
