@@ -13,6 +13,10 @@ interface TrackableCellChangeForward {
   text?: PartialTextContent;
 }
 
+export type TrackableCellChange =
+  | TrackableCellChangeForward
+  | TrackableCellChangeBackward;
+
 interface HistoryStep {
   forward: TrackableCellChangeForward[];
   backward: TrackableCellChangeBackward[];

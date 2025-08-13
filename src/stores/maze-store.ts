@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { DEFAULT_COLUMNS_AMOUNT, DEFAULT_ROWS_AMOUNT } from "@constants";
 import {
-  createCellFinder,
   createIdToCellMap,
   createRectMaze,
   fillCellsWithOpenNeighbors,
@@ -14,6 +13,9 @@ import {
 import { getGeneratorByAlgoName } from "@generators/index";
 import { generatorNames } from "@generators/index";
 import { getFunctionById } from "@solvers/index";
+import CellHistory, { TrackableCellChange } from "@models/CellHistory";
+
+const cellHistory = new CellHistory();
 
 export const cellSelectionModes = {
   none: "none",
@@ -23,17 +25,21 @@ export const cellSelectionModes = {
 
 export type cellSelectionModes = keyof typeof cellSelectionModes;
 
+export type TimeDirection = "backward" | "forward";
+
 type State = {
   rowsAmount: RectMaze["rows"];
   columnsAmount: RectMaze["cols"];
   isMazeRendering: boolean;
-  mazeGenerationAlgorithm: generatorNames;
+  mazeGenerationAlgorithm: string;
   mazeInstance: RectMaze | null;
   mazeSolution: Array<PolygonCell>;
   startId: string;
   endId: string;
   cellSelection: cellSelectionModes;
   mazeSolverId: number;
+  currIterationStep: number;
+  currVisualMazeChange: TrackableCellChange[] | null;
 };
 
 type Action = {
@@ -54,7 +60,29 @@ type Action = {
   setStartId: (startId: State["startId"]) => void;
   setEndId: (endId: State["endId"]) => void;
   setMazeSolverId: (mazeSolverId: State["mazeSolverId"]) => void;
+
+  takeStepInSolution: (direction: TimeDirection) => boolean;
 };
+
+let serialSolver: Generator<[], void, any> | null = null;
+
+function initSerialSolver(
+  startId: string,
+  endId: string,
+  mazeSolverId: number,
+  mazeInstance: RectMaze | null
+) {
+  const mazeSolver = getFunctionById(mazeSolverId, "SteppedAlgoExecution");
+
+  const maze = mazeInstance;
+
+  if (!mazeSolver || !maze) return false;
+
+  const cells = maze.cells;
+  const map = createIdToCellMap(cells);
+
+  serialSolver = mazeSolver(startId, endId, map);
+}
 
 export const useMazeStore = create<State & Action>()(
   immer((set, get) => ({
@@ -68,6 +96,8 @@ export const useMazeStore = create<State & Action>()(
     startId: generateRectMazeId(0, 0),
     endId: generateRectMazeId(0, 0),
     cellSelection: "none",
+    currIterationStep: -1,
+    currVisualMazeChange: null,
 
     updateRowsAmount: (newRowsAmount) => set({ rowsAmount: newRowsAmount }),
 
@@ -78,8 +108,9 @@ export const useMazeStore = create<State & Action>()(
       set({ mazeGenerationAlgorithm: newAlgorithm }),
 
     setMazeSolverId: (mazeSolverId) => {
-      console.log(mazeSolverId);
-      set({ mazeSolverId });
+      cellHistory.clear();
+
+      set({ mazeSolverId, currIterationStep: -1, currVisualMazeChange: null });
     },
 
     setIsMazeRendering(newStatus) {
@@ -142,32 +173,80 @@ export const useMazeStore = create<State & Action>()(
       });
     },
 
+    takeStepInSolution(direction) {
+      const startId = get().startId;
+      const endId = get().endId;
+
+      // do not change the order of cellHistory.undo() and cellHistory.redo() with set function
+
+      if (direction === "backward") {
+        if (cellHistory.canUndo()) {
+          set({
+            currIterationStep: cellHistory.historyIndex,
+            currVisualMazeChange: cellHistory.historyCurrentStep.backward,
+          });
+
+          cellHistory.undo();
+        }
+
+        return true;
+      }
+
+      if (cellHistory.canRedo()) {
+        cellHistory.redo();
+
+        set({
+          currIterationStep: cellHistory.historyIndex,
+          currVisualMazeChange: cellHistory.historyCurrentStep.forward,
+        });
+
+        return true;
+      }
+
+      if (cellHistory.isEmpty()) {
+        initSerialSolver(
+          startId,
+          endId,
+          get().mazeSolverId,
+          get().mazeInstance
+        );
+      }
+
+      const next = serialSolver?.next();
+
+      if (next && next.done) return false;
+
+      if (next && !next.done) {
+        cellHistory.applyStep(next.value);
+
+        set({
+          currIterationStep: cellHistory.historyIndex + 1,
+          currVisualMazeChange: next.value,
+        });
+
+        return true;
+      }
+
+      return false;
+    },
+
     solveMaze() {
       const startId = get().startId;
       const endId = get().endId;
 
-      set((draft) => {
-        const maze = draft.mazeInstance;
+      if (serialSolver === null)
+        initSerialSolver(
+          startId,
+          endId,
+          get().mazeSolverId,
+          get().mazeInstance
+        );
 
-        if (!maze) return;
+      cellHistory.applyMultipleSteps([...serialSolver!]);
 
-        const cells = maze.cells;
-
-        const mazeSolver = getFunctionById(0);
-
-        //@ts-ignore
-        const findCell = createCellFinder(cells);
-        //@ts-ignore
-        const map = createIdToCellMap(cells);
-
-        const path = mazeSolver(startId, endId, map) || [];
-
-        const mazeSolution = path.map((cellId) => {
-          return findCell(cellId);
-        });
-
-        //@ts-ignore
-        draft.mazeSolution = mazeSolution;
+      set({
+        currIterationStep: cellHistory.historyIndex,
+        currVisualMazeChange: cellHistory.historyCurrentStep.forward,
       });
     },
   }))
