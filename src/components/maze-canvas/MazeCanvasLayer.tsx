@@ -1,5 +1,5 @@
 import { CanvasLayer } from "@components/lib/CanvasLayer";
-import { WALLS_WIDTH } from "@constants";
+import { colors, WALLS_WIDTH } from "@constants";
 import { drawWalls } from "@models/maze-canvas-rendering";
 import { useCallback } from "react";
 import { useMazeStore } from "@stores/maze-store";
@@ -26,6 +26,7 @@ export const MazeCanvasLayer = () => {
 
       drawWalls(ctx, cells, {
         lineWidth: WALLS_WIDTH,
+        wallColor: colors.WALL_COLOR,
       });
 
       setIsMazeRendering(false);

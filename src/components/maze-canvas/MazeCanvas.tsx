@@ -4,6 +4,7 @@ import { CellMarksCanvasLayer } from "./CellMarksCanvasLayer";
 import { MazeCanvasLayer } from "./MazeCanvasLayer";
 import { MazePathCanvasLayer } from "./MazePathCanvasLayer";
 import { CursorInteractionCanvasLayer } from "./CursorInteractionCanvasLayer";
+import { InnerStateOfAlgoCanvasLayer } from "./InnerStateOfAlgoCanvasLayer";
 
 export function MazeCanvasImproved() {
   const rows = useMazeStore((state) => state.rowsAmount);
@@ -12,6 +13,7 @@ export function MazeCanvasImproved() {
 
   return (
     <CanvasLayersContainer targetAspect={aspect}>
+      <InnerStateOfAlgoCanvasLayer />
       <MazeCanvasLayer />
       <MazePathCanvasLayer />
       <CellMarksCanvasLayer />
