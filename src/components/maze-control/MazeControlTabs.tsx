@@ -5,8 +5,14 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import SelectButtons from "../lib/SelectButtons.tsx";
 import { useMazeStore } from "@stores/maze-store.ts";
 import PathFindingButton from "./PathFindingButton.tsx";
-import { getSolverIdByAlgoName, mazeSolversNames } from "@solvers/index.ts";
+import {
+  getSolverIdByAlgoName,
+  mazeSolversNames,
+  solversInfo,
+} from "@solvers/index.ts";
 import { generatorNames } from "@generators/index.ts";
+import TakeSolutionStepButton from "./TakeSolutionStepButton.tsx";
+import StopOrResumeButton from "./StopOrResumeButton.tsx";
 
 const classNames = {
   selectedTab: "tab--selected",
@@ -39,7 +45,7 @@ export function TabPanelContentForMazeGeneration() {
       <h2 className={classNames.headingForAlgoSet}>{headingForGenerators}</h2>
       <SelectButtons
         options={generatorNames}
-        onSelect={(option) => updateMazeGenerator(option)}
+        onSelect={(option) => option && updateMazeGenerator(option)}
       />
       <MazeGenerationButton />
     </>
@@ -49,6 +55,7 @@ export function TabPanelContentForMazeGeneration() {
 export function TabPanelContentForPathFinding() {
   const setCellSelection = useMazeStore((state) => state.setCellSelection);
   const setMazeSolverId = useMazeStore((state) => state.setMazeSolverId);
+  const mazeSolverId = useMazeStore((state) => state.mazeSolverId);
 
   return (
     <>
@@ -68,7 +75,16 @@ export function TabPanelContentForPathFinding() {
           if (option) setMazeSolverId(getSolverIdByAlgoName(option));
         }}
       />
-      <PathFindingButton />
+      {solversInfo[mazeSolverId].features.includes("JumpToFinal") && (
+        <PathFindingButton />
+      )}
+      {solversInfo[mazeSolverId].features.includes("SteppedAlgoExecution") && (
+        <>
+          <TakeSolutionStepButton direction="backward" />
+          <StopOrResumeButton />
+          <TakeSolutionStepButton direction="forward" />
+        </>
+      )}
     </>
   );
 }
