@@ -36,7 +36,6 @@ type State = {
   endId: string;
   cellSelection: cellSelectionModes;
   mazeSolverId: number;
-  currIterationStep: number;
   currVisualMazeChange: TrackableCellChange[] | null;
   cellHistory: CellHistory;
   serialSolver: Generator<[], void, any> | null;
@@ -100,7 +99,6 @@ export const useMazeStore = create<State & Action>()(
       startId: generateRectMazeId(0, 0),
       endId: generateRectMazeId(0, 0),
       cellSelection: "none",
-      currIterationStep: -1,
       currVisualMazeChange: null,
 
       updateRowsAmount: (newRowsAmount) => set({ rowsAmount: newRowsAmount }),
@@ -148,11 +146,14 @@ export const useMazeStore = create<State & Action>()(
         set({ mazeInstance: maze });
       },
 
+      get currIterationStep() {
+        return cellHistory.historyIndex;
+      },
+
       resetSolverState: () => {
         cellHistory.clear();
         set({
           serialSolver: null,
-          currIterationStep: -1,
           currVisualMazeChange: null,
           mazeSolution: [],
         });
@@ -199,7 +200,6 @@ export const useMazeStore = create<State & Action>()(
         if (direction === "backward") {
           if (cellHistory.canUndo()) {
             set({
-              currIterationStep: cellHistory.historyIndex,
               currVisualMazeChange: cellHistory.historyCurrentStep.backward,
             });
 
@@ -213,7 +213,6 @@ export const useMazeStore = create<State & Action>()(
           cellHistory.redo();
 
           set({
-            currIterationStep: cellHistory.historyIndex,
             currVisualMazeChange: cellHistory.historyCurrentStep.forward,
           });
 
@@ -241,7 +240,6 @@ export const useMazeStore = create<State & Action>()(
           cellHistory.applyStep(next.value);
 
           set({
-            currIterationStep: cellHistory.historyIndex + 1,
             currVisualMazeChange: next.value,
           });
 
@@ -269,7 +267,6 @@ export const useMazeStore = create<State & Action>()(
         cellHistory.applyMultipleSteps([...serialSolver!]);
 
         set({
-          currIterationStep: cellHistory.historyIndex,
           currVisualMazeChange: cellHistory.historyCurrentStep.forward,
         });
       },
