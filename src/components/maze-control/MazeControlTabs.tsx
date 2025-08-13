@@ -13,6 +13,7 @@ import {
 import { generatorNames } from "@generators/index.ts";
 import TakeSolutionStepButton from "./TakeSolutionStepButton.tsx";
 import StopOrResumeButton from "./StopOrResumeButton.tsx";
+import ClearMazeButton from "./ClearMazeButton.tsx";
 
 const classNames = {
   selectedTab: "tab--selected",
@@ -80,6 +81,7 @@ export function TabPanelContentForPathFinding() {
       )}
       {solversInfo[mazeSolverId].features.includes("SteppedAlgoExecution") && (
         <>
+          <ClearMazeButton />
           <TakeSolutionStepButton direction="backward" />
           <StopOrResumeButton />
           <TakeSolutionStepButton direction="forward" />

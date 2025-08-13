@@ -11,9 +11,15 @@ let animationDelay = 30;
 const StopOrResumeButton = () => {
   const takeStepInSolution = useMazeStore((state) => state.takeStepInSolution);
   const [shouldWork, setShouldWork] = useState(false);
+  const setIsMazeRendering = useMazeStore((state) => state.setIsMazeRendering);
 
   useEffect(() => {
-    if (!shouldWork) return;
+    if (!shouldWork) {
+      setIsMazeRendering(false);
+      return;
+    }
+
+    setIsMazeRendering(true);
 
     const animationTimer = setInterval(() => {
       const success = takeStepInSolution("forward");
@@ -21,7 +27,10 @@ const StopOrResumeButton = () => {
       if (!success) setShouldWork(false);
     }, animationDelay);
 
-    return () => clearInterval(animationTimer);
+    return () => {
+      setIsMazeRendering(false);
+      clearInterval(animationTimer);
+    };
   }, [shouldWork]);
 
   return (

@@ -151,7 +151,7 @@ export const useMazeStore = create<State & Action>()(
       },
 
       resetSolverState: () => {
-        cellHistory.clear();
+        get().cellHistory.clear();
         set({
           serialSolver: null,
           currVisualMazeChange: null,

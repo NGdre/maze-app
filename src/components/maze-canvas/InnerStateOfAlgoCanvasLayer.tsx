@@ -11,9 +11,11 @@ export const InnerStateOfAlgoCanvasLayer = () => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   const change = useMazeStore((state) => state.currVisualMazeChange);
+  const cellHistory = useMazeStore((state) => state.cellHistory);
   const cells = useMazeStore((state) => state.mazeInstance?.cells);
-
   const ctx = ctxRef.current;
+
+  if (ctx && cellHistory.getState().size === 0) ctx.clearRect(0, 0, 9999, 9999);
 
   if (ctx && change && cells) {
     const map = createIdToCellMap(cells);
