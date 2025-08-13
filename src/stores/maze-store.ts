@@ -13,7 +13,7 @@ import {
 import { getGeneratorByAlgoName } from "@generators/index";
 import { generatorNames } from "@generators/index";
 import { getFunctionById } from "@solvers/index";
-import CellHistory, { TrackableCellChange } from "@models/CellHistory";
+import CellHistory, { type CellPatch } from "@models/CellHistory";
 
 export const cellSelectionModes = {
   none: "none",
@@ -36,7 +36,7 @@ type State = {
   endId: string;
   cellSelection: cellSelectionModes;
   mazeSolverId: number;
-  currVisualMazeChange: TrackableCellChange[] | null;
+  currVisualMazeChange: CellPatch[] | null;
   cellHistory: CellHistory;
   serialSolver: Generator<[], void, any> | null;
 };

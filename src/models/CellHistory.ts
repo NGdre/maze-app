@@ -1,190 +1,181 @@
-type TextContent = Record<string, number> | null;
-type PartialTextContent = Record<string, number | null> | null;
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Record<string, any>;
 
-interface TrackableCellChangeBackward {
-  id: string;
-  color: string | null;
-  text?: TextContent;
-}
-
-interface TrackableCellChangeForward {
-  id: string;
-  color?: string | null;
-  text?: PartialTextContent;
-}
-
-export type TrackableCellChange =
-  | TrackableCellChangeForward
-  | TrackableCellChangeBackward;
+/*
+  $deleted: true removes cell completly
+  string: undefined deletes property
+*/
+type CellState = Record<string, PropertyValue> & { id: string };
+export type CellPatch = Partial<CellState> & { id: string };
 
 interface HistoryStep {
-  forward: TrackableCellChangeForward[];
-  backward: TrackableCellChangeBackward[];
+  forward: CellPatch[];
+  backward: CellPatch[];
 }
 
 export default class CellHistory {
-  private currentState: Map<string, TrackableCellChangeBackward>;
-  private _history: HistoryStep[];
-  private currIndex: number;
+  private currentState: Map<string, CellState>;
+  private history: HistoryStep[];
+  private currentIndex: number;
 
   constructor() {
     this.currentState = new Map();
-    this._history = [];
-    this.currIndex = -1;
+    this.history = [];
+    this.currentIndex = -1;
   }
 
-  get historyIndex() {
-    return this.currIndex;
+  private deepClone<T extends object>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
   }
 
-  get historyCurrentStep() {
-    return this._history[this.historyIndex]; // как сделать иммутабельным?
-  }
+  private applyPatchToCell(
+    current: CellState | undefined,
+    patch: CellPatch
+  ): CellState {
+    const newState = current ? this.deepClone(current) : { id: patch.id };
 
-  canUndo() {
-    return this.currIndex >= 0;
-  }
+    for (const [key, value] of Object.entries(patch)) {
+      if (key === "id") continue;
 
-  canRedo() {
-    return this.currIndex < this._history.length - 1;
-  }
-
-  isEmpty() {
-    return this._history.length === 0;
-  }
-
-  private applyCellChange(change: TrackableCellChangeForward): void {
-    const { id, color, text } = change;
-    let currentCell = this.currentState.get(id);
-
-    if (color === null) {
-      this.currentState.delete(id);
-      return;
-    }
-
-    if (color !== undefined && color !== null) {
-      if (!currentCell) {
-        currentCell = { id, color, text: undefined };
-        this.currentState.set(id, currentCell);
+      if (value === undefined) {
+        delete newState[key];
+      } else if (value !== null && typeof value === "object") {
+        newState[key] = { ...((newState[key] as object) || {}), ...value };
       } else {
-        currentCell = { ...currentCell, color };
-        this.currentState.set(id, currentCell);
+        newState[key] = value;
       }
     }
 
-    if (currentCell) {
-      let newText = currentCell.text ? { ...currentCell.text } : undefined;
-
-      if (text !== undefined) {
-        if (text === null) {
-          newText = undefined;
-        } else {
-          if (!newText) newText = {};
-
-          for (const [key, value] of Object.entries(text)) {
-            if (value === null) {
-              if (newText && newText.hasOwnProperty(key)) {
-                delete newText[key];
-              }
-            } else {
-              newText[key] = value;
-            }
-          }
-
-          if (newText && Object.keys(newText).length === 0) {
-            newText = undefined;
-          }
-        }
-      }
-
-      if (newText !== currentCell.text) {
-        this.currentState.set(id, { ...currentCell, text: newText });
-      }
-    }
+    return newState as CellState;
   }
 
-  applyStep(steps: TrackableCellChangeForward[]): void {
-    if (!steps) return;
+  private generateBackwardPatch(
+    id: string,
+    currentState: CellState | undefined
+  ): CellPatch {
+    if (!currentState) {
+      return { id, $deleted: true };
+    }
+
+    const patch: CellPatch = { id };
+    for (const key in currentState) {
+      if (key !== "id") {
+        patch[key] = currentState[key];
+      }
+    }
+    return patch;
+  }
+
+  applyStep(patches: CellPatch[]): void {
+    const changesMap = new Map<string, CellPatch>();
+    const backwardPatches: CellPatch[] = [];
+    const forwardPatches: CellPatch[] = [];
+
     // преобразуем в Map, чтобы учитывать только последние изменения,
     // если есть несколько изменений для одной клетки
-    const changesMap = new Map<string, TrackableCellChangeForward>();
-
-    steps.forEach((step) => {
-      const existing = changesMap.get(step.id) || { id: step.id };
-
-      if (step.color !== undefined) {
-        existing.color = step.color;
-      }
-
-      if (step.text !== undefined) {
-        if (!existing.text) existing.text = {};
-        existing.text = { ...existing.text, ...step.text };
-      }
-
-      changesMap.set(step.id, existing);
+    patches.forEach((patch) => {
+      const existing = changesMap.get(patch.id) || { id: patch.id };
+      changesMap.set(patch.id, { ...existing, ...patch });
     });
 
-    const backwardStep: TrackableCellChangeBackward[] = [];
-    const forwardStep: TrackableCellChangeForward[] = [];
+    changesMap.forEach((patch, id) => {
+      const current = this.currentState.get(id);
 
-    changesMap.forEach((change, id) => {
-      const currentCell = this.currentState.get(id);
-      backwardStep.push(currentCell ? { ...currentCell } : { id, color: null });
+      backwardPatches.push(this.generateBackwardPatch(id, current));
 
-      forwardStep.push(change);
+      if (patch.$deleted) {
+        this.currentState.delete(id);
+      } else {
+        const newState = this.applyPatchToCell(current, patch);
+        this.currentState.set(id, newState);
+      }
 
-      this.applyCellChange(change);
+      forwardPatches.push({ ...patch });
     });
 
     // нужно чтобы начать новую ветку изменений после нескольких undo
-    this._history = this._history.slice(0, this.currIndex + 1);
-    this.currIndex++;
-    this._history[this.currIndex] = {
-      forward: forwardStep,
-      backward: backwardStep,
+    this.history = this.history.slice(0, this.currentIndex + 1);
+
+    this.currentIndex++;
+    this.history[this.currentIndex] = {
+      forward: forwardPatches,
+      backward: backwardPatches,
     };
   }
 
-  applyMultipleSteps(arrayOfsteps: TrackableCellChangeForward[][]): void {
+  applyMultipleSteps(arrayOfsteps: CellPatch[][]): void {
     const flattened = arrayOfsteps.flat();
 
     this.applyStep(flattened);
   }
 
   undo(): void {
-    if (this.currIndex < 0) return;
+    if (this.currentIndex < 0) return;
 
-    const step = this._history[this.currIndex].backward;
+    const step = this.history[this.currentIndex].backward;
 
-    for (const cell of step) {
-      if (cell.color === null) {
-        this.currentState.delete(cell.id);
+    // Восстанавливаем предыдущее состояние
+    step.forEach((patch) => {
+      if (patch.$deleted) {
+        this.currentState.delete(patch.id);
       } else {
-        this.currentState.set(cell.id, { ...cell });
+        const current = this.currentState.get(patch.id);
+        this.currentState.set(patch.id, this.applyPatchToCell(current, patch));
       }
-    }
+    });
 
-    this.currIndex--;
+    this.currentIndex--;
   }
 
   redo(): void {
-    if (this.currIndex >= this._history.length - 1) return;
+    if (this.currentIndex >= this.history.length - 1) return;
 
-    this.currIndex++;
-    const step = this._history[this.currIndex].forward;
+    this.currentIndex++;
+    const step = this.history[this.currentIndex].forward;
 
-    for (const change of step) {
-      this.applyCellChange(change);
-    }
+    step.forEach((patch) => {
+      const current = this.currentState.get(patch.id);
+
+      if (patch.$deleted) {
+        this.currentState.delete(patch.id);
+      } else {
+        this.currentState.set(patch.id, this.applyPatchToCell(current, patch));
+      }
+    });
   }
 
-  getState(): Map<string, TrackableCellChangeBackward> {
+  getState(): Map<string, CellState> {
     return new Map(this.currentState); //оборачиваем в Map для защиты от возможных внешних изменений
   }
 
   clear() {
-    this._history = [];
-    this.currIndex = -1;
+    this.history = [];
+    this.currentIndex = -1;
     this.currentState.clear();
+  }
+
+  get historyIndex() {
+    return this.currentIndex;
+  }
+
+  get historyCurrentStep() {
+    return this.history[this.historyIndex]; // как сделать иммутабельным?
+  }
+
+  canUndo() {
+    return this.currentIndex >= 0;
+  }
+
+  canRedo() {
+    return this.currentIndex < this.history.length - 1;
+  }
+
+  isEmpty() {
+    return this.history.length === 0;
   }
 }
