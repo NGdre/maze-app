@@ -82,194 +82,198 @@ function initSerialSolver(
   return mazeSolver(startId, endId, map);
 }
 
-export const useMazeStore = create<State & Action>()(
-  immer((set, get) => {
-    const cellHistory = new CellHistory();
+export const createMazeStore = (initialState: Partial<State> = {}) =>
+  create<State & Action>()(
+    immer((set, get) => {
+      const cellHistory = new CellHistory();
 
-    return {
-      cellHistory,
-      serialSolver: null,
-      rowsAmount: DEFAULT_ROWS_AMOUNT,
-      columnsAmount: DEFAULT_COLUMNS_AMOUNT,
-      isMazeRendering: false,
-      mazeGenerationAlgorithm: generatorNames[0],
-      mazeSolverId: 0,
-      mazeInstance: null,
-      mazeSolution: [],
-      startId: generateRectMazeId(0, 0),
-      endId: generateRectMazeId(0, 0),
-      cellSelection: "none",
-      currVisualMazeChange: null,
+      return {
+        cellHistory,
+        serialSolver: null,
+        rowsAmount: DEFAULT_ROWS_AMOUNT,
+        columnsAmount: DEFAULT_COLUMNS_AMOUNT,
+        isMazeRendering: false,
+        mazeGenerationAlgorithm: generatorNames[0],
+        mazeSolverId: 0,
+        mazeInstance: null,
+        mazeSolution: [],
+        startId: generateRectMazeId(0, 0),
+        endId: generateRectMazeId(0, 0),
+        cellSelection: "none",
+        currVisualMazeChange: null,
+        ...initialState,
 
-      updateRowsAmount: (newRowsAmount) => set({ rowsAmount: newRowsAmount }),
+        updateRowsAmount: (newRowsAmount) => set({ rowsAmount: newRowsAmount }),
 
-      updateColumnsAmount: (newColumnsAmount) =>
-        set({ columnsAmount: newColumnsAmount }),
+        updateColumnsAmount: (newColumnsAmount) =>
+          set({ columnsAmount: newColumnsAmount }),
 
-      updateMazeGenerationAlgorithm: (newAlgorithm) =>
-        set({ mazeGenerationAlgorithm: newAlgorithm }),
+        updateMazeGenerationAlgorithm: (newAlgorithm) =>
+          set({ mazeGenerationAlgorithm: newAlgorithm }),
 
-      setMazeSolverId: (mazeSolverId) => {
-        get().resetSolverState();
+        setMazeSolverId: (mazeSolverId) => {
+          get().resetSolverState();
 
-        set({
-          mazeSolverId,
-        });
-      },
+          set({
+            mazeSolverId,
+          });
+        },
 
-      setIsMazeRendering(newStatus) {
-        set({ isMazeRendering: newStatus });
-      },
+        setIsMazeRendering(newStatus) {
+          set({ isMazeRendering: newStatus });
+        },
 
-      setCellSelection(cellSelection) {
-        set({ cellSelection });
-      },
+        setCellSelection(cellSelection) {
+          set({ cellSelection });
+        },
 
-      setStartId(startId) {
-        set({ startId });
-      },
+        setStartId(startId) {
+          set({ startId });
+        },
 
-      setEndId(endId) {
-        set({ endId });
-      },
+        setEndId(endId) {
+          set({ endId });
+        },
 
-      initMaze(edgeLength) {
-        const rows = get().rowsAmount;
-        const cols = get().columnsAmount;
+        initMaze(edgeLength) {
+          const rows = get().rowsAmount;
+          const cols = get().columnsAmount;
 
-        set({
-          endId: generateRectMazeId(rows - 1, cols - 1),
-        });
+          set({
+            endId: generateRectMazeId(rows - 1, cols - 1),
+          });
 
-        const maze = createRectMaze(rows, cols, edgeLength);
+          const maze = createRectMaze(rows, cols, edgeLength);
 
-        set({ mazeInstance: maze });
-      },
+          set({ mazeInstance: maze });
+        },
 
-      get currIterationStep() {
-        return cellHistory.historyIndex;
-      },
+        get currIterationStep() {
+          return cellHistory.historyIndex;
+        },
 
-      resetSolverState: () => {
-        get().cellHistory.clear();
-        set({
-          serialSolver: null,
-          currVisualMazeChange: null,
-          mazeSolution: [],
-        });
-      },
+        resetSolverState: () => {
+          get().cellHistory.clear();
+          set({
+            serialSolver: null,
+            currVisualMazeChange: null,
+            mazeSolution: [],
+          });
+        },
 
-      async generateMaze() {
-        const rows = get().rowsAmount;
-        const cols = get().columnsAmount;
-        const mazeInstance = get().mazeInstance;
-        const currGeneratorAlgo = get().mazeGenerationAlgorithm;
+        async generateMaze() {
+          const rows = get().rowsAmount;
+          const cols = get().columnsAmount;
+          const mazeInstance = get().mazeInstance;
+          const currGeneratorAlgo = get().mazeGenerationAlgorithm;
 
-        set({ mazeSolution: [] });
+          set({ mazeSolution: [] });
 
-        const mazeGenerator = getGeneratorByAlgoName(currGeneratorAlgo);
+          const mazeGenerator = getGeneratorByAlgoName(currGeneratorAlgo);
 
-        const toRemove = [...mazeGenerator(rows, cols)].map((pair) => [
-          pair[0].id,
-          pair[1].id,
-        ]);
+          const toRemove = [...mazeGenerator(rows, cols)].map((pair) => [
+            pair[0].id,
+            pair[1].id,
+          ]);
 
-        if (!mazeInstance) return;
+          if (!mazeInstance) return;
 
-        const edgeLength = mazeInstance.cellSize;
+          const edgeLength = mazeInstance.cellSize;
 
-        const maze = createRectMaze(rows, cols, edgeLength);
+          const maze = createRectMaze(rows, cols, edgeLength);
 
-        //@ts-ignore
-        removeWallsBetweenCells(maze.cells, toRemove);
+          //@ts-ignore
+          removeWallsBetweenCells(maze.cells, toRemove);
 
-        fillCellsWithOpenNeighbors(maze.cells);
+          fillCellsWithOpenNeighbors(maze.cells);
 
-        set({
-          mazeInstance: maze,
-        });
-      },
+          set({
+            mazeInstance: maze,
+          });
+        },
 
-      takeStepInSolution(direction) {
-        const startId = get().startId;
-        const endId = get().endId;
-        const cellHistory = get().cellHistory;
+        takeStepInSolution(direction) {
+          const startId = get().startId;
+          const endId = get().endId;
+          const cellHistory = get().cellHistory;
 
-        // do not change the order of cellHistory.undo() and cellHistory.redo() with set function
+          // do not change the order of cellHistory.undo() and cellHistory.redo() with set function
 
-        if (direction === "backward") {
-          if (cellHistory.canUndo()) {
-            set({
-              currVisualMazeChange: cellHistory.historyCurrentStep.backward,
-            });
+          if (direction === "backward") {
+            if (cellHistory.canUndo()) {
+              set({
+                currVisualMazeChange: cellHistory.historyCurrentStep.backward,
+              });
 
-            cellHistory.undo();
+              cellHistory.undo();
+            }
+
+            return true;
           }
 
-          return true;
-        }
+          if (cellHistory.canRedo()) {
+            cellHistory.redo();
 
-        if (cellHistory.canRedo()) {
-          cellHistory.redo();
+            set({
+              currVisualMazeChange: cellHistory.historyCurrentStep.forward,
+            });
+
+            return true;
+          }
+
+          let serialSolver = get().serialSolver;
+
+          if (cellHistory.isEmpty()) {
+            serialSolver = initSerialSolver(
+              startId,
+              endId,
+              get().mazeSolverId,
+              get().mazeInstance
+            );
+
+            set({ serialSolver });
+          }
+
+          const next = serialSolver?.next();
+
+          if (next && next.done) return false;
+
+          if (next && !next.done) {
+            cellHistory.applyStep(next.value);
+
+            set({
+              currVisualMazeChange: next.value,
+            });
+
+            return true;
+          }
+
+          return false;
+        },
+
+        solveMaze() {
+          const startId = get().startId;
+          const endId = get().endId;
+          const cellHistory = get().cellHistory;
+          let { serialSolver } = get();
+
+          if (serialSolver === null) {
+            serialSolver = initSerialSolver(
+              startId,
+              endId,
+              get().mazeSolverId,
+              get().mazeInstance
+            );
+            set({ serialSolver });
+          }
+          cellHistory.applyMultipleSteps([...serialSolver!]);
 
           set({
             currVisualMazeChange: cellHistory.historyCurrentStep.forward,
           });
+        },
+      };
+    })
+  );
 
-          return true;
-        }
-
-        let serialSolver = get().serialSolver;
-
-        if (cellHistory.isEmpty()) {
-          serialSolver = initSerialSolver(
-            startId,
-            endId,
-            get().mazeSolverId,
-            get().mazeInstance
-          );
-
-          set({ serialSolver });
-        }
-
-        const next = serialSolver?.next();
-
-        if (next && next.done) return false;
-
-        if (next && !next.done) {
-          cellHistory.applyStep(next.value);
-
-          set({
-            currVisualMazeChange: next.value,
-          });
-
-          return true;
-        }
-
-        return false;
-      },
-
-      solveMaze() {
-        const startId = get().startId;
-        const endId = get().endId;
-        const cellHistory = get().cellHistory;
-        let { serialSolver } = get();
-
-        if (serialSolver === null) {
-          serialSolver = initSerialSolver(
-            startId,
-            endId,
-            get().mazeSolverId,
-            get().mazeInstance
-          );
-          set({ serialSolver });
-        }
-        cellHistory.applyMultipleSteps([...serialSolver!]);
-
-        set({
-          currVisualMazeChange: cellHistory.historyCurrentStep.forward,
-        });
-      },
-    };
-  })
-);
+export const useMazeStore = createMazeStore();
