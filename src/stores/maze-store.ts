@@ -61,7 +61,7 @@ type Action = {
   setMazeSolverId: (mazeSolverId: State["mazeSolverId"]) => void;
 
   takeStepInSolution: (direction: TimeDirection) => boolean;
-  resetSolverState: () => void;
+  resetSolution: () => void;
 };
 
 function initSerialSolver(
@@ -112,7 +112,7 @@ export const createMazeStore = (initialState: Partial<State> = {}) =>
           set({ mazeGenerationAlgorithm: newAlgorithm }),
 
         setMazeSolverId: (mazeSolverId) => {
-          get().resetSolverState();
+          get().resetSolution();
 
           set({
             mazeSolverId,
@@ -152,7 +152,7 @@ export const createMazeStore = (initialState: Partial<State> = {}) =>
           return cellHistory.historyIndex;
         },
 
-        resetSolverState: () => {
+        resetSolution: () => {
           get().cellHistory.clear();
           set({
             serialSolver: null,

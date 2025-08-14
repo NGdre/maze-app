@@ -1,7 +1,7 @@
 import { useMazeStore } from "../../stores/maze-store";
 
 const ClearMazeButton = () => {
-  const clearMaze = useMazeStore((state) => state.resetSolverState);
+  const clearMaze = useMazeStore((state) => state.resetSolution);
   const isMazeRendering = useMazeStore((state) => state.isMazeRendering);
   return (
     <button
