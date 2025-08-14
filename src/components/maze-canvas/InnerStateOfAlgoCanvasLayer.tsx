@@ -2,7 +2,11 @@ import { CanvasLayer } from "@components/lib/CanvasLayer";
 import { colors } from "@constants";
 import { createIdToCellMap } from "@models/maze";
 import { drawPolygon } from "@models/maze-canvas-rendering";
-import { useMazeStore } from "@stores/maze-store";
+import {
+  useCellHistory,
+  useCurrVisualMazeChange,
+  useMazeCells,
+} from "@stores/selectors";
 import { scalePolygon } from "@utils";
 import { useCallback, useRef } from "react";
 import { bfsVisualSchema } from "src/configs/visual";
@@ -10,9 +14,10 @@ import { bfsVisualSchema } from "src/configs/visual";
 export const InnerStateOfAlgoCanvasLayer = () => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  const change = useMazeStore((state) => state.currVisualMazeChange);
-  const cellHistory = useMazeStore((state) => state.cellHistory);
-  const cells = useMazeStore((state) => state.mazeInstance?.cells);
+  const change = useCurrVisualMazeChange();
+  const cellHistory = useCellHistory();
+  const cells = useMazeCells();
+
   const ctx = ctxRef.current;
 
   if (ctx && cellHistory.getState().size === 0) ctx.clearRect(0, 0, 9999, 9999);

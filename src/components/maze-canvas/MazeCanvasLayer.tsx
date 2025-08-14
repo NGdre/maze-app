@@ -3,11 +3,16 @@ import { colors, WALLS_WIDTH } from "@constants";
 import { drawWalls } from "@models/maze-canvas-rendering";
 import { useCallback } from "react";
 import { useMazeStore } from "@stores/maze-store";
+import {
+  useColumnsAmount,
+  useMazeCells,
+  useSetIsMazeRendering,
+} from "@stores/selectors";
 
 export const MazeCanvasLayer = () => {
-  const columns = useMazeStore((state) => state.columnsAmount);
-  const cells = useMazeStore((state) => state.mazeInstance?.cells);
-  const setIsMazeRendering = useMazeStore((state) => state.setIsMazeRendering);
+  const columns = useColumnsAmount();
+  const cells = useMazeCells();
+  const setIsMazeRendering = useSetIsMazeRendering();
 
   const initMaze = useMazeStore((state) => state.initMaze);
 

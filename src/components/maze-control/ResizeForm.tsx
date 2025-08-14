@@ -1,6 +1,7 @@
 import { useMazeStore } from "../../stores/maze-store";
 import SelectNumber from "../lib/SelectNumber";
 import { MIN_COLUMNS, MIN_ROWS, MAX_COLUMNS, MAX_ROWS } from "../../constants";
+import { useColumnsAmount, useRowsAmount } from "@stores/selectors";
 
 const ROWS_LABEL = "строки";
 const COLUMN_LABEL = "столбцы";
@@ -10,7 +11,7 @@ const classNames = {
 };
 
 export function SelectRows() {
-  const rowsAmount = useMazeStore((state) => state.rowsAmount);
+  const rowsAmount = useRowsAmount();
   const updateRowsAmount = useMazeStore((state) => state.updateRowsAmount);
 
   return (
@@ -25,7 +26,7 @@ export function SelectRows() {
 }
 
 export function SelectColumns() {
-  const columnsAmount = useMazeStore((state) => state.columnsAmount);
+  const columnsAmount = useColumnsAmount();
   const updateColumnsAmount = useMazeStore(
     (state) => state.updateColumnsAmount
   );

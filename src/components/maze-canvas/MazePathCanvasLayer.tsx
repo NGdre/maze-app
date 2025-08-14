@@ -2,7 +2,7 @@ import { CanvasLayer } from "@components/lib/CanvasLayer";
 import { PATH_WIDTH } from "@constants";
 import { createIdToCellMap, PolygonCell } from "@models/maze";
 import { drawLine } from "@models/maze-canvas-rendering";
-import { useMazeStore } from "@stores/maze-store";
+import { useCurrVisualMazeChange, useMazeCells } from "@stores/selectors";
 import { useCallback, useRef } from "react";
 import { bfsVisualSchema } from "src/configs/visual";
 
@@ -10,8 +10,8 @@ export const MazePathCanvasLayer = () => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const prevCellRef = useRef<PolygonCell | null>(null);
 
-  const change = useMazeStore((state) => state.currVisualMazeChange);
-  const cells = useMazeStore((state) => state.mazeInstance?.cells);
+  const change = useCurrVisualMazeChange();
+  const cells = useMazeCells();
 
   const ctx = ctxRef.current;
   const prev = prevCellRef.current;

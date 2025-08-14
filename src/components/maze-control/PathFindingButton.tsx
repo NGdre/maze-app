@@ -1,3 +1,4 @@
+import { useSetIsMazeRendering } from "@stores/selectors";
 import { useMazeStore } from "../../stores/maze-store";
 import RunAndWaitButton from "../lib/RunAndWaitButton";
 
@@ -10,7 +11,7 @@ const PathFindingButton = () => {
   const isLoading = false;
 
   const solveMaze = useMazeStore((state) => state.solveMaze);
-  const setIsMazeRendering = useMazeStore((state) => state.setIsMazeRendering);
+  const setIsMazeRendering = useSetIsMazeRendering();
 
   return (
     <RunAndWaitButton

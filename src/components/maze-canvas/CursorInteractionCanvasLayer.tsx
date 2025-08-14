@@ -3,6 +3,7 @@ import { CELL_SELECTION_THROTTLE_DELAY, colors } from "@constants";
 import { createCellFinder, generateRectMazeId, RectMaze } from "@models/maze";
 import { fillPolygonWithCircle } from "@models/maze-canvas-rendering";
 import { cellSelectionModes, useMazeStore } from "@stores/maze-store";
+import { useColumnsAmount, useMazeCells } from "@stores/selectors";
 import { flow, noop, throttle } from "@utils";
 import ow from "ow";
 import { useCallback } from "react";
@@ -102,8 +103,8 @@ function clickInteraction(config: {
 }
 
 export const CursorInteractionCanvasLayer = () => {
-  const cells = useMazeStore((state) => state.mazeInstance?.cells);
-  const columns = useMazeStore((state) => state.columnsAmount);
+  const cells = useMazeCells();
+  const columns = useColumnsAmount();
   const cellSelection = useMazeStore((state) => state.cellSelection);
   const setStartId = useMazeStore((state) => state.setStartId);
   const setEndId = useMazeStore((state) => state.setEndId);

@@ -1,11 +1,12 @@
-import { TimeDirection, useMazeStore } from "../../stores/maze-store";
+import { useTakeStepInSolution } from "@stores/selectors";
+import { TimeDirection } from "@stores/maze-store";
 
 const TakeSolutionStepButton = ({
   direction,
 }: {
   direction: TimeDirection;
 }) => {
-  const takeStepInSolution = useMazeStore((state) => state.takeStepInSolution);
+  const takeStepInSolution = useTakeStepInSolution();
 
   return (
     <button

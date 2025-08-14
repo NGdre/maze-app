@@ -1,3 +1,4 @@
+import { useIsMazeRendering, useSetIsMazeRendering } from "@stores/selectors";
 import { useMazeStore } from "../../stores/maze-store";
 import RunAndWaitButton from "../lib/RunAndWaitButton";
 
@@ -7,10 +8,10 @@ const mazeGenerationbuttonText = {
 };
 
 const MazeGenerationButton = () => {
-  const isMazeRendering = useMazeStore((state) => state.isMazeRendering);
+  const isMazeRendering = useIsMazeRendering();
+  const setIsMazeRendering = useSetIsMazeRendering();
 
   const generateMaze = useMazeStore((state) => state.generateMaze);
-  const setIsMazeRendering = useMazeStore((state) => state.setIsMazeRendering);
 
   const isLoading = isMazeRendering;
 

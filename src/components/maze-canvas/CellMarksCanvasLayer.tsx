@@ -4,12 +4,12 @@ import { createCellFinder } from "@models/maze";
 import { fillPolygonWithCircle } from "@models/maze-canvas-rendering";
 import { identity } from "lodash";
 import { useCallback } from "react";
-import { useMazeStore } from "@stores/maze-store";
+import { useEndId, useMazeCells, useStartId } from "@stores/selectors";
 
 export const CellMarksCanvasLayer = () => {
-  const cells = useMazeStore((state) => state.mazeInstance?.cells);
-  const startId = useMazeStore((state) => state.startId);
-  const endId = useMazeStore((state) => state.endId);
+  const cells = useMazeCells();
+  const startId = useStartId();
+  const endId = useEndId();
 
   const findCell = useCallback(cells ? createCellFinder(cells) : identity, [
     cells,

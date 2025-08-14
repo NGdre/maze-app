@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { useMazeStore } from "../../stores/maze-store";
+import {
+  useSetIsMazeRendering,
+  useTakeStepInSolution,
+} from "@stores/selectors";
 
 const buttonText = {
   STOP: "остановить",
@@ -9,9 +13,9 @@ const buttonText = {
 let animationDelay = 30;
 
 const StopOrResumeButton = () => {
-  const takeStepInSolution = useMazeStore((state) => state.takeStepInSolution);
+  const takeStepInSolution = useTakeStepInSolution();
   const [shouldWork, setShouldWork] = useState(false);
-  const setIsMazeRendering = useMazeStore((state) => state.setIsMazeRendering);
+  const setIsMazeRendering = useSetIsMazeRendering();
 
   useEffect(() => {
     if (!shouldWork) {
