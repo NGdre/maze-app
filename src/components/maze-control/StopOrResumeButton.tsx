@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
-import { useMazeStore } from "../../stores/maze-store";
 import {
   useSetIsMazeRendering,
   useTakeStepInSolution,
 } from "@stores/selectors";
+import { VISIALIZATION_ANIMATION_DELAY } from "@constants";
 
 const buttonText = {
   STOP: "остановить",
   RESUME: "запустить",
 };
-
-let animationDelay = 30;
 
 const StopOrResumeButton = () => {
   const takeStepInSolution = useTakeStepInSolution();
@@ -29,7 +27,7 @@ const StopOrResumeButton = () => {
       const success = takeStepInSolution("forward");
 
       if (!success) setShouldWork(false);
-    }, animationDelay);
+    }, VISIALIZATION_ANIMATION_DELAY);
 
     return () => {
       setIsMazeRendering(false);

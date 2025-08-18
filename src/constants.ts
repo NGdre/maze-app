@@ -24,7 +24,7 @@ export const localStorageKeys = {
   MAZE_MATRIX: "maze-matrix",
 } as const;
 
-export const PATH_ANIMATION_DELAY = 0;
+export const VISIALIZATION_ANIMATION_DELAY = 10;
 export const CELL_SELECTION_THROTTLE_DELAY = 0;
 
 export const CELL_ID_DELIMITER = ",";
