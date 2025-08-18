@@ -124,8 +124,7 @@ export default class CellHistory {
       if (patch.$deleted) {
         this.currentState.delete(patch.id);
       } else {
-        const current = this.currentState.get(patch.id);
-        this.currentState.set(patch.id, this.applyPatchToCell(current, patch));
+        this.currentState.set(patch.id, { ...patch } as CellState);
       }
     });
 
