@@ -150,7 +150,11 @@ export default class CellHistory {
   }
 
   getState(): Map<string, CellState> {
-    return new Map(this.currentState); //оборачиваем в Map для защиты от возможных внешних изменений
+    const clonedMap = new Map<string, CellState>();
+    this.currentState.forEach((value, key) => {
+      clonedMap.set(key, this.deepClone(value));
+    });
+    return clonedMap;
   }
 
   clear() {
