@@ -1,5 +1,5 @@
 import { CanvasLayer } from "@components/lib/CanvasLayer";
-import { colors } from "@constants";
+import { colors, FILL_TO_CELL_RATIO } from "@constants";
 import { createIdToCellMap } from "@models/maze";
 import { drawPolygon } from "@models/maze-canvas-rendering";
 import {
@@ -9,7 +9,8 @@ import {
 } from "@stores/selectors";
 import { scalePolygon } from "@utils";
 import { useCallback, useRef } from "react";
-import { bfsVisualSchema } from "src/configs/visual";
+
+const ERASE_CELL_RATIO = 1;
 
 export const InnerStateOfAlgoCanvasLayer = () => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -23,24 +24,27 @@ export const InnerStateOfAlgoCanvasLayer = () => {
   if (ctx && cellHistory.getState().size === 0) ctx.clearRect(0, 0, 9999, 9999);
 
   if (ctx && change && cells) {
-    const map = createIdToCellMap(cells);
+    const idToCellMap = createIdToCellMap(cells);
 
     for (const cellChange of change) {
-      const cell = map.get(cellChange.id);
+      const currCell = idToCellMap.get(cellChange.id);
 
-      if (!cell) continue;
+      if (!currCell) continue;
 
-      const whenPathIsFound =
-        cellChange.color === bfsVisualSchema.colors.foundPath.line;
+      const isPathCell = cellChange.isPathCell;
 
-      if (whenPathIsFound) {
-        drawPolygon(ctx, scalePolygon(cell.getPoints(), 1), colors.EMPTY_CELL);
-      } else
-        drawPolygon(
-          ctx,
-          scalePolygon(cell.getPoints(), cellChange.color ? 0.5 : 1),
-          cellChange.color || colors.EMPTY_CELL
-        );
+      const drawPolygonArgs = isPathCell
+        ? { scaleFactor: ERASE_CELL_RATIO, color: colors.EMPTY_CELL }
+        : {
+            scaleFactor: FILL_TO_CELL_RATIO,
+            color: cellChange.color as string,
+          };
+
+      drawPolygon(
+        ctx,
+        scalePolygon(currCell.getPoints(), drawPolygonArgs.scaleFactor),
+        drawPolygonArgs.color
+      );
     }
   }
 

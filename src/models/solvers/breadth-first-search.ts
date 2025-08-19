@@ -7,45 +7,50 @@ type id = string;
 
 export type BFSSolutionStep =
   | {
-      isPathFound: false;
+      isPathCell: false;
       enqueued: id[];
       visited: id;
     }
   | {
-      isPathFound: true;
+      isPathCell: true;
       foundPath: id;
+      prevCellId: id | null;
     };
 
 type bfsCell = {
   id: id;
   color: string;
-  isPathFound: boolean;
+  lineColor?: string;
+  isPathCell: boolean;
+  prevCellId?: id | null;
 };
 
 export function applyBfsVisual(solutionStep: BFSSolutionStep) {
   const changedCells: bfsCell[] = [];
 
-  if (solutionStep.isPathFound) {
+  if (solutionStep.isPathCell) {
     changedCells.push({
       id: solutionStep.foundPath,
-      color: bfsVisualSchema.colors.foundPath.background,
-      isPathFound: true,
+      color: bfsVisualSchema.foundPath.colors.background,
+      lineColor: bfsVisualSchema.foundPath.colors.line,
+      prevCellId: solutionStep.prevCellId,
+      isPathCell: true,
     });
   } else {
     if (solutionStep.enqueued)
       for (const id of solutionStep.enqueued) {
         changedCells.push({
           id,
-          color: bfsVisualSchema.colors.enqueued.background,
-          isPathFound: false,
+          color: bfsVisualSchema.enqueued.colors.background,
+          isPathCell: false,
         });
       }
 
     if (solutionStep.visited)
       changedCells.push({
         id: solutionStep.visited,
-        color: bfsVisualSchema.colors.visited.background,
-        isPathFound: false,
+        color: bfsVisualSchema.visited.colors.background,
+        isPathCell: false,
       });
   }
 
@@ -82,7 +87,7 @@ export function* bfsSerial(
     visited.add(currId);
 
     const partialSolution: BFSSolutionStep = {
-      isPathFound: false,
+      isPathCell: false,
       enqueued: [],
       visited: currId,
     };
@@ -100,13 +105,18 @@ export function* bfsSerial(
     yield partialSolution;
   }
 
+  let prevCellId = null;
+
   for (const cellId of reconstructPathSerial(startId, endId, cameFrom)) {
     const partialSolution: BFSSolutionStep = {
-      isPathFound: true,
+      isPathCell: true,
       foundPath: cellId,
+      prevCellId,
     };
 
-    yield partialSolution;
+    if (prevCellId) yield partialSolution;
+
+    prevCellId = cellId;
   }
 }
 
