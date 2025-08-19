@@ -37,7 +37,8 @@ export const InnerStateOfAlgoCanvasLayer = () => {
         ? { scaleFactor: ERASE_CELL_RATIO, color: colors.EMPTY_CELL }
         : {
             scaleFactor: FILL_TO_CELL_RATIO,
-            color: cellChange.color as string,
+            color:
+              (cellChange.color as string | undefined) || colors.EMPTY_CELL,
           };
 
       drawPolygon(
