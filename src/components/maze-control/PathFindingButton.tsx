@@ -1,4 +1,4 @@
-import { useSetIsMazeRendering } from "@stores/selectors";
+import { useIsMazeRendering, useSetIsMazeRendering } from "@stores/selectors";
 import { useMazeStore } from "../../stores/maze-store";
 import RunAndWaitButton from "../lib/RunAndWaitButton";
 
@@ -8,10 +8,10 @@ const pathFindingbuttonText = {
 };
 
 const PathFindingButton = () => {
-  const isLoading = false;
+  const isMazeRendering = useIsMazeRendering();
+  const setIsMazeRendering = useSetIsMazeRendering();
 
   const solveMaze = useMazeStore((state) => state.solveMaze);
-  const setIsMazeRendering = useSetIsMazeRendering();
 
   return (
     <RunAndWaitButton
@@ -21,7 +21,7 @@ const PathFindingButton = () => {
       }}
       waitText={pathFindingbuttonText.FINDING}
       runText={pathFindingbuttonText.FIND}
-      isLoading={isLoading}
+      isLoading={isMazeRendering}
     />
   );
 };

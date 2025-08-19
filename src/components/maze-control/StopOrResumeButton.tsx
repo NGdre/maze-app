@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
+  useIsMazeRendering,
   useSetIsMazeRendering,
   useTakeStepInSolution,
 } from "@stores/selectors";
@@ -12,11 +13,11 @@ const buttonText = {
 
 const StopOrResumeButton = () => {
   const takeStepInSolution = useTakeStepInSolution();
-  const [shouldWork, setShouldWork] = useState(false);
+  const isMazeRendering = useIsMazeRendering();
   const setIsMazeRendering = useSetIsMazeRendering();
 
   useEffect(() => {
-    if (!shouldWork) {
+    if (!isMazeRendering) {
       setIsMazeRendering(false);
       return;
     }
@@ -26,22 +27,22 @@ const StopOrResumeButton = () => {
     const animationTimer = setInterval(() => {
       const success = takeStepInSolution("forward");
 
-      if (!success) setShouldWork(false);
+      if (!success) setIsMazeRendering(false);
     }, VISIALIZATION_ANIMATION_DELAY);
 
     return () => {
       setIsMazeRendering(false);
       clearInterval(animationTimer);
     };
-  }, [shouldWork]);
+  }, [isMazeRendering]);
 
   return (
     <button
       onClick={() => {
-        setShouldWork(!shouldWork);
+        setIsMazeRendering(!isMazeRendering);
       }}
     >
-      {shouldWork ? buttonText.STOP : buttonText.RESUME}
+      {isMazeRendering ? buttonText.STOP : buttonText.RESUME}
     </button>
   );
 };
