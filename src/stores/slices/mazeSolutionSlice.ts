@@ -45,6 +45,7 @@ type State = {
   endId: string;
   cellSelection: CellSelectionModes;
   mazeSolverId: number;
+  isSerialSolverDone: boolean;
 };
 
 type Action = {
@@ -71,6 +72,7 @@ export const createMazeSolutionSlice: StateCreator<
   endId: generateRectMazeId(0, 0),
   cellSelection: "none",
   mazeSolverId: 0,
+  isSerialSolverDone: false,
 
   currVisualMazeChange: null,
 
@@ -169,7 +171,12 @@ export const createMazeSolutionSlice: StateCreator<
 
     const next = serialSolver?.next();
 
-    if (next && next.done) return false;
+    if (next && next.done) {
+      set({
+        isSerialSolverDone: true,
+      });
+      return false;
+    }
 
     if (next && !next.done) {
       cellHistory.applyStep(next.value);
