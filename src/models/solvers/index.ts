@@ -1,13 +1,13 @@
 import { AlgoConfig, AlgoFeatureName } from "src/configs/types";
-import aStar from "./a-star";
+import { aStarSerialVisual } from "./a-star";
 import { bfsVisual, bfsSerialVisual } from "./breadth-first-search";
 
 export const solversInfo: AlgoConfig[] = [
   {
-    function: aStar,
+    function: aStarSerialVisual,
     algoName: "A*",
     id: 0,
-    features: [],
+    features: ["JumpToFinal", "SteppedAlgoExecution"],
     multipleFunctions: false,
   },
   {

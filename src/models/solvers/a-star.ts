@@ -1,7 +1,82 @@
-import { reconstructPath } from "./reconstruct-path";
+import { reconstructPathSerial } from "./reconstruct-path";
 import { type createIdToCellMap } from "../maze";
+import { aStarVisualSchema } from "src/configs/visual";
+import { mapGenerator } from "@utils";
+import { manhattanDistance, type heuristic } from "./heuristics";
 
-class AStarNode {
+type id = string;
+
+export type AStarText = {
+  "h-value": string;
+  "g-value": string;
+  "f-value": string;
+};
+
+export type AStarSolutionStep =
+  | {
+      isPathCell: false;
+      enqueued: Array<{
+        id: id;
+        text: AStarText;
+      }>;
+      visited: {
+        id: id;
+        text: AStarText;
+      };
+    }
+  | {
+      isPathCell: true;
+      foundPath: id;
+      prevCellId: id | null;
+    };
+
+type AStarCell = {
+  id: id;
+  color: string;
+  lineColor?: string;
+  isPathCell: boolean;
+  prevCellId?: id;
+  text?: AStarText;
+};
+
+export function applyAStarVisual(solutionStep: AStarSolutionStep) {
+  if (solutionStep.isPathCell) {
+    return [
+      {
+        id: solutionStep.foundPath,
+        color: aStarVisualSchema.foundPath.colors.background,
+        lineColor: aStarVisualSchema.foundPath.colors.line,
+        prevCellId: solutionStep.prevCellId,
+        isPathCell: true,
+      },
+    ];
+  }
+
+  const changedCells: AStarCell[] = [];
+
+  if (!solutionStep.visited || !solutionStep.enqueued)
+    throw new Error("solutionStep has no visited or enqueued cell");
+
+  for (const { id, text } of solutionStep.enqueued) {
+    changedCells.push({
+      id,
+      text,
+      color: aStarVisualSchema.enqueued.colors.background,
+      isPathCell: false,
+    });
+  }
+
+  changedCells.push({
+    id: solutionStep.visited.id,
+    text: solutionStep.visited.text,
+    color: aStarVisualSchema.visited.colors.background,
+    isPathCell: false,
+  });
+
+  return changedCells;
+}
+
+export class AStarNode {
   id: string;
   x: number;
   y: number;
@@ -23,26 +98,22 @@ class AStarNode {
   static createKey(x: number, y: number) {
     return `${x},${y}`;
   }
+
+  getText(): AStarText {
+    return {
+      "f-value": "" + Math.round(this.f),
+      "g-value": "" + Math.round(this.g),
+      "h-value": "" + Math.round(this.h),
+    };
+  }
 }
-
-export type heuristic = (
-  firstPoint: { x: number; y: number },
-  secondPoint: { x: number; y: number }
-) => number;
-
-export const manhattanDistance: heuristic = (firstPoint, secondPoint) => {
-  return (
-    Math.abs(firstPoint.x - secondPoint.x) +
-    Math.abs(firstPoint.y - secondPoint.y)
-  );
-};
 
 /*
   - нужно определится с возврщаемыми значениями
   - функция знает слишком много об интерфейсе узлов. Если он поменяется, то функция сломается
   - нужно сделать более прозрачную логику
 */
-function aStar(
+export function* aStarSerial(
   startId: string,
   endId: string,
   idToCellMap: ReturnType<typeof createIdToCellMap>,
@@ -79,7 +150,7 @@ function aStar(
     const currentAStarNode = open.shift()!;
 
     if (currentAStarNode.x === endX && currentAStarNode.y === endY) {
-      return reconstructPath(startId, endId, cameFrom);
+      break;
     }
 
     const currMazeCell = idToCellMap.get(currentAStarNode.id);
@@ -87,6 +158,15 @@ function aStar(
     if (!currMazeCell) return null;
 
     closed.add(AStarNode.createKey(currentAStarNode.x, currentAStarNode.y)); // почему такой порядок?
+
+    const partialSolution: AStarSolutionStep = {
+      isPathCell: false,
+      enqueued: [],
+      visited: {
+        id: currentAStarNode.id,
+        text: currentAStarNode.getText(),
+      },
+    };
 
     for (const neighborId of currMazeCell.neighbors) {
       const neighborMazeCell = idToCellMap.get(neighborId);
@@ -100,6 +180,11 @@ function aStar(
 
       if (closed.has(neighborKey)) continue;
 
+      const neighborData: { id: string; text: AStarText } = {
+        id: neighborId,
+        text: { "h-value": "", "g-value": "", "f-value": "" },
+      };
+
       const tentativeG = currentAStarNode.g + 1; // почему +1?
 
       const neighbor = open.find((n) => n.x === neighborX && n.y === neighborY);
@@ -107,6 +192,8 @@ function aStar(
       if (neighbor) {
         if (tentativeG < neighbor.g) {
           neighbor.g = tentativeG;
+
+          neighborData.text = neighbor.getText();
 
           cameFrom.set(neighborId, currentAStarNode.id);
         }
@@ -116,17 +203,52 @@ function aStar(
           { x: endX, y: endY }
         );
 
-        open.push(
-          new AStarNode(neighborId, neighborX, neighborY, tentativeG, h)
+        const newNeighborNode = new AStarNode(
+          neighborId,
+          neighborX,
+          neighborY,
+          tentativeG,
+          h
         );
+
+        neighborData.text = newNeighborNode.getText();
+
+        open.push(newNeighborNode);
 
         if (!cameFrom.has(neighborId))
           cameFrom.set(neighborId, currentAStarNode.id);
       }
+
+      partialSolution.enqueued.push(neighborData);
     }
+
+    yield partialSolution;
   }
 
-  return null;
+  let prevCellId = null;
+
+  for (const cellId of reconstructPathSerial(startId, endId, cameFrom)) {
+    const partialSolution: AStarSolutionStep = {
+      isPathCell: true,
+      foundPath: cellId,
+      prevCellId,
+    };
+
+    if (prevCellId) yield partialSolution;
+
+    prevCellId = cellId;
+  }
 }
 
-export default aStar;
+export function aStarSerialVisual(
+  startId: string,
+  endId: string,
+  idToCellMap: ReturnType<typeof createIdToCellMap>
+) {
+  return mapGenerator(
+    aStarSerial(startId, endId, idToCellMap),
+    applyAStarVisual
+  );
+}
+
+export default aStarSerial;
