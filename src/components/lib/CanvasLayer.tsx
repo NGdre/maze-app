@@ -7,7 +7,7 @@ export type CanvasLayerProps = {
     renderWidth: number,
     renderHeight: number,
     dpr: number
-  ) => void | (() => void);
+  ) => void | Promise<void> | (() => void);
   isInteractive?: boolean;
 };
 
